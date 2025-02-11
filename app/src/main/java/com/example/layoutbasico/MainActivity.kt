@@ -42,6 +42,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,11 +76,13 @@ class MainActivity : ComponentActivity() {
  // Pesquisa
 @Composable
 fun SearchBar(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    searchQuery: String,
+    onSearchQueryChanged: (String) -> Unit
 ) {
         TextField(
-            value = "",
-            onValueChange = {},
+            value = searchQuery,
+            onValueChange = { query -> onSearchQueryChanged(query) },
             leadingIcon = {
                 Icon(imageVector = Icons.Default.Search,
                     contentDescription = null)
@@ -93,14 +99,6 @@ fun SearchBar(
                 .heightIn(min = 56.dp)
         )
 }
-
- @Preview(showBackground = true)
- @Composable
- fun SearchBarPreview() {
-     LayoutBasicoTheme {
-         SearchBar()
-     }
- }
 
  //Alinhamento
  @Composable
@@ -127,18 +125,6 @@ fun SearchBar(
             style = MaterialTheme.typography.bodyMedium
             )
     }
- }
-
- @Preview(showBackground = true)
- @Composable
- fun AlignYourBodyElementPreview() {
-     LayoutBasicoTheme {
-         AlignYourBodyElement(
-             texto = R.string.ab1_inversions,
-             imagem = R.drawable.ab1_inversions,
-             modifier = Modifier.padding(8.dp)
-         )
-     }
  }
 
 // Card
@@ -172,41 +158,22 @@ fun SearchBar(
     }
  }
 
- @Preview(showBackground = true)
- @Composable
- fun FavoriteCollectionCardPreview() {
-     LayoutBasicoTheme {
-         FavoriteCollectionCard(
-             texto = R.string.fc2_nature_meditations,
-             imagem = R.drawable.fc2_nature_meditations,
-             modifier = Modifier.padding(8.dp)
-         )
-     }
- }
-
 // Linha
 @Composable
 fun AlignYourBodyRow(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    filteredData: List<DrawableStringPair> // filtro de pesquisa
 ) {
     LazyRow (
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(horizontal = 16.dp),
         modifier = modifier
     ) {
-        items(alignYourBodyData){
+        items(filteredData){ // passando o filtro
             item -> AlignYourBodyElement(item.drawable, item.text)
          }
     }
 }
-
- @Preview(showBackground = true)
- @Composable
- fun AlignYourBodyRowPreview() {
-     LayoutBasicoTheme {
-         AlignYourBodyRow()
-     }
- }
 
 //Grade
  @Composable
@@ -225,14 +192,6 @@ fun AlignYourBodyRow(
                 )
         }
     }
- }
-
- @Preview(showBackground = true)
- @Composable
- fun FavoriteCollectionsGridPreview() {
-     LayoutBasicoTheme {
-         FavoriteCollectionsGrid()
-     }
  }
 
 
@@ -255,38 +214,27 @@ fun AlignYourBodyRow(
      }
  }
 
- @Preview(showBackground = true)
- @Composable
- fun HomeSectionPreview() {
-     LayoutBasicoTheme {
-         HomeSection(R.string.align_your_body) {
-             AlignYourBodyRow()
-         }
-     }
- }
-
  @Composable
  fun HomeScreen(modifier: Modifier = Modifier) {
+     var searchQuery by remember { mutableStateOf("") } // pesquisa
+     val filteredAlignYourBodyData = alignYourBodyData.filter {
+         stringResource(it.text).contains(searchQuery, ignoreCase = true)
+     } // filtro de pesquisa
+
      Column (
          modifier.verticalScroll(rememberScrollState())
      ) {
          Spacer(Modifier.height(16.dp))
-         SearchBar(Modifier.height(16.dp))
+         SearchBar(Modifier.height(56.dp),
+             searchQuery = searchQuery,
+             onSearchQueryChanged = { newQuery -> searchQuery = newQuery })
          HomeSection(R.string.align_your_body) {
-             AlignYourBodyRow()
+             AlignYourBodyRow(filteredData = filteredAlignYourBodyData) // passando o filtro
          }
          HomeSection(R.string.favorite_collections) {
              FavoriteCollectionsGrid()
          }
          Spacer(Modifier.height(16.dp))
-     }
- }
-
- @Preview(showBackground = true)
- @Composable
- fun HomeScreenPreview() {
-     LayoutBasicoTheme {
-         HomeScreen()
      }
  }
 
@@ -340,12 +288,9 @@ fun CalmariaApp() {
     }
 }
 
+ // variáveis públicas para serem acessadas
 
-
-
-
-
- private val alignYourBodyData = listOf(
+ val alignYourBodyData = listOf(
      R.drawable.ab1_inversions to R.string.ab1_inversions,
      R.drawable.ab2_quick_yoga to R.string.ab2_quick_yoga,
      R.drawable.ab3_stretching to R.string.ab3_stretching,
@@ -354,7 +299,7 @@ fun CalmariaApp() {
      R.drawable.ab6_pre_natal_yoga to R.string.ab6_pre_natal_yoga
  ).map { DrawableStringPair(it.first, it.second) }
 
- private val favoriteCollectionsData = listOf(
+ val favoriteCollectionsData = listOf(
      R.drawable.fc1_short_mantras to R.string.fc1_short_mantras,
      R.drawable.fc2_nature_meditations to R.string.fc2_nature_meditations,
      R.drawable.fc3_stress_and_anxiety to R.string.fc3_stress_and_anxiety,
@@ -363,7 +308,7 @@ fun CalmariaApp() {
      R.drawable.fc6_nightly_wind_down to R.string.fc6_nightly_wind_down
  ).map { DrawableStringPair(it.first, it.second) }
 
- private data class DrawableStringPair(
+ data class DrawableStringPair(
      @DrawableRes val drawable: Int,
      @StringRes val text: Int
  )
