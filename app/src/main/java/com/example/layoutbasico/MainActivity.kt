@@ -55,19 +55,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.layoutbasico.ui.theme.LayoutBasicoTheme
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.layoutbasico.ui.theme.LayoutBasicoTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-//            LayoutBasicoTheme {
-//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-//                    SearchBar(
-//                        modifier = Modifier.padding(innerPadding)
-//                    )
-//                }
-//            }
             CalmariaApp()
         }
     }
@@ -239,8 +237,8 @@ fun AlignYourBodyRow(
  }
 
 // Navegacao
- @Composable
-private fun BarraNavegacao(modifier: Modifier = Modifier) {
+@Composable
+fun BarraNavegacao(navController: NavController, modifier: Modifier = Modifier) {
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surfaceVariant,
         modifier = modifier
@@ -256,7 +254,9 @@ private fun BarraNavegacao(modifier: Modifier = Modifier) {
                 Text(stringResource(R.string.bottom_navigation_home))
             },
             selected = true,
-            onClick = {}
+            onClick = {
+                navController.navigate("home") // Navega para a tela inicial (Home)
+            }
         )
         NavigationBarItem(
             icon = {
@@ -269,7 +269,9 @@ private fun BarraNavegacao(modifier: Modifier = Modifier) {
                 Text(stringResource(R.string.bottom_navigation_profile))
             },
             selected = false,
-            onClick = {}
+            onClick = {
+                navController.navigate("profile") // Navega para a tela de Perfil
+            }
         )
     }
 }
@@ -279,11 +281,25 @@ private fun BarraNavegacao(modifier: Modifier = Modifier) {
 @Composable
 fun CalmariaApp() {
     LayoutBasicoTheme {
-        Scaffold(bottomBar = {
-            BarraNavegacao()
-        }) {
-            padding ->
-                HomeScreen(Modifier.padding(padding))
+        val navController = rememberNavController() // Cria o controlador de navegação
+        Scaffold(
+            bottomBar = {
+                BarraNavegacao(navController)
+            }
+        ) { padding ->
+            // Configura o NavHost
+            NavHost(
+                navController = navController,
+                startDestination = "home",
+                modifier = Modifier.padding(padding)
+            ) {
+                composable("home") {
+                    HomeScreen() // Tela de Home
+                }
+                composable("profile") {
+                    ProfileScreen() // Tela de Perfil
+                }
+            }
         }
     }
 }
